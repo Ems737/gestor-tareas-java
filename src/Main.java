@@ -31,9 +31,11 @@ class Tarea implements Serializable {
 
 class GestorTareas {
     private ArrayList<Tarea> tareas;
+    private final String archivo = "tareas.txt";
 
     public GestorTareas() {
         tareas = new ArrayList<>();
+	cargarDesdeArchivo();
     }
 
     public void agregarTarea(String descripcion) {
@@ -64,6 +66,40 @@ class GestorTareas {
         tareas.removeIf(Tarea::isCompletada);
         System.out.println("Tareas completadas eliminadas.");
     }
+
+    public void guardarEnArchivo() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivo))) {
+            for (Tarea tarea : tareas) {
+                writer.write(tarea.getDescripcion() + ";" + tarea.isCompletada());
+                writer.newLine();
+            }
+            System.out.println("Tareas guardadas en archivo.");
+        } catch (IOException e) {
+            System.out.println("Error al guardar: " + e.getMessage());
+        }
+    }
+
+    public void cargarDesdeArchivo() {
+        File f = new File(archivo);
+        if (!f.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] partes = linea.split(";");
+                if (partes.length == 2) {
+                    Tarea t = new Tarea(partes[0]);
+                    if (Boolean.parseBoolean(partes[1])) {
+                        t.marcarCompletada();
+                    }
+                    tareas.add(t);
+                }
+            }
+            System.out.println("Tareas cargadas desde archivo.");
+        } catch (IOException e) {
+            System.out.println("Error al cargar: " + e.getMessage());
+        }
+    }
 }
 
 public class Main {
@@ -78,6 +114,7 @@ public class Main {
             System.out.println("2. Listar tareas");
             System.out.println("3. Marcar tarea como completada");
             System.out.println("4. Eliminar tareas completadas");
+	    System.out.println("5. Guardar tareas en archivo");
             System.out.println("0. Salir");
             System.out.print("Elige una opción: ");
 
@@ -102,6 +139,9 @@ public class Main {
                 case 4:
                     gestor.eliminarCompletadas();
                     break;
+                case 5:
+                    gestor.guardarEnArchivo();
+                    break;
                 case 0:
                     System.out.println("Saliendo...");
                     break;
@@ -113,4 +153,3 @@ public class Main {
         scanner.close();
     }
 }
-	
